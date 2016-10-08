@@ -10,7 +10,7 @@ class FlagParser
 
   def initialize
     @banner = [] of String
-    @handlers = [] of FlagParser::ArgHandler
+    @handlers = [] of FlagParser::FlagHandler
     @rules = {} of String => Regex
   end
 
@@ -43,7 +43,7 @@ class FlagParser
     if @rules[rule]?
       @rules[rule_name] = @rules[rule]
     else
-      raise
+      raise "Unknown rule name '#{rule}'"
     end
   end
 
@@ -61,19 +61,21 @@ class FlagParser
       flag_parts = flag.split /\s+/
 
       # TODO: rename this
-      arg_parts = [] of String | Regex
+      flag_handler = FlagHandler.new &block
 
       flag_parts.each do |flag_part|
         if @rules[flag_part]?
           # There is a regex rule for this arg part
-          arg_parts << @rules[flag_part]
+          flag_handler.parts << @rules[flag_part]
         else
           # This arg part is just raw string
-          arg_parts << flag_part
+          flag_handler.parts << flag_part
         end
       end
 
-      @handlers << ArgHandler.new arg_parts, &block
+      if flag_handler.parts.size > 0
+        @handlers << flag_handler
+      end
     end
   end
 
@@ -82,7 +84,7 @@ class FlagParser
       match = false
 
       @handlers.each do |handler|
-        if handler.match args
+        if handler.match? args
           match = true
           args.delete_at 0, handler.size
           # FIXME: we give the args for when the callback will make a sub parser
@@ -103,30 +105,29 @@ class FlagParser
 end
 
 # TODO: rename, this is not 'arg' but 'Flag'
-struct FlagParser::ArgHandler
-  @min_size : Int32
-  @arg_parts : Array(String | Regex)
+struct FlagParser::FlagHandler
+  getter parts : Array(String | Regex)
 
-  def initialize(@arg_parts, &@callback : FlagCallback)
-    @min_size = @arg_parts.size
+  def initialize(&@callback : FlagCallback)
+    @parts = [] of String | Regex
     @last_dynamic_matches = [] of String
   end
 
   def size
-    @min_size
+    @parts.size
   end
 
   def execute(args)
     @callback.call @last_dynamic_matches, args
   end
 
-  def match(args)
+  def match?(args)
     @last_dynamic_matches.clear
-    return false if args.size < @min_size
+    return false if args.size < @parts.size
 
     args_it = args.each
 
-    @arg_parts.each do |arg_matcher|
+    @parts.each do |arg_matcher|
       arg = args_it.next
       if arg.is_a?(Iterator::Stop)
         return false
