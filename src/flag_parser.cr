@@ -120,9 +120,8 @@ end
 class FlagSubParser < FlagParser
   getter upvalues
 
-  def initialize
+  def initialize(@upvalues = {} of Symbol => String)
     super
-    @upvalues = {} of Symbol => String
   end
 
   def parse(args, @upvalues)
