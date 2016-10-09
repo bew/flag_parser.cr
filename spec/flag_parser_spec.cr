@@ -97,4 +97,53 @@ describe FlagParser do
       # TODO
     end
   end
+
+  describe "#branch_on" do
+    # init sub parsers
+
+    suboption = false
+    subparser_simple = FlagParser.new.tap do |parser|
+      parser.on "-so" do
+        suboption = true
+      end
+    end
+
+    subname = ""
+    subparser_upvalue = FlagSubParser.new.tap do |parser|
+      parser.on "-so" do
+        subname = "wtf"
+      end
+
+      parser.add_rule "RULE", FlagParser::Rule::ID
+
+      parser.on "-sn" do
+        subname = parser.upvalues[:name]
+      end
+    end
+
+    Spec.before_each do
+      suboption = false
+      subname = ""
+    end
+
+    it "automatic simple flag" do
+      parser = FlagParser.new
+      parser.branch_on "sub", parser: subparser_simple
+
+      parser.parse %w(sub -so)
+      suboption.should be_true
+    end
+
+    it "manual flag with rule" do
+      parser = FlagParser.new
+      parser.add_rule "NAME", FlagParser::Rule::ID
+
+      parser.branch_on "sub NAME", parser: subparser_upvalue do |(name), args|
+        subparser_upvalue.parse args, upvalues: {:name => name}
+      end
+
+      parser.parse %w(sub my_name -sn)
+      subname.should eq("my_name")
+    end
+  end
 end

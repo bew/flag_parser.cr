@@ -1,6 +1,4 @@
 class FlagParser
-  alias FlagCallback = Array(String), Array(String) ->
-
   def self.parse(args)
     parser = FlagParser.new
     yield parser
@@ -10,7 +8,7 @@ class FlagParser
 
   def initialize
     @banner = [] of String
-    @handlers = [] of FlagParser::FlagHandler
+    @handlers = [] of FlagParser::Flag
     @rules = {} of String => Regex
   end
 
@@ -47,8 +45,23 @@ class FlagParser
     end
   end
 
+  def branch_on(*flags, parser subparser, doc description = nil)
+    flag_handlers = on_impl(*flags, doc: description) do |_, args|
+      subparser.parse args
+    end
+  end
+
+  def branch_on(*flags, parser subparser, doc description = nil, &block : Flag::Callback)
+    flag_handlers = on_impl(*flags, doc: description, &block)
+  end
+
   # type spec needed ?
-  def on(*flags, doc description = nil, &block : FlagCallback)
+  def on(*flags, doc description = nil, &block : Flag::Callback)
+    on_impl(*flags, doc: description, &block)
+    return #nil
+  end
+
+  protected def on_impl(*flags, doc description = nil, &block : Flag::Callback)
     flags.each do |flag|
       # split spaces
       #
@@ -61,7 +74,7 @@ class FlagParser
       flag_parts = flag.split /\s+/
 
       # TODO: rename this
-      flag_handler = FlagHandler.new &block
+      flag_handler = Flag.new &block
 
       flag_parts.each do |flag_part|
         if @rules[flag_part]?
@@ -104,11 +117,26 @@ class FlagParser
   end
 end
 
+class FlagSubParser < FlagParser
+  getter upvalues
+
+  def initialize
+    super
+    @upvalues = {} of Symbol => String
+  end
+
+  def parse(args, @upvalues)
+    super args
+  end
+end
+
 # TODO: rename, this is not 'arg' but 'Flag'
-struct FlagParser::FlagHandler
+struct FlagParser::Flag
+  alias Callback = Array(String), Array(String) ->
+
   getter parts : Array(String | Regex)
 
-  def initialize(&@callback : FlagCallback)
+  def initialize(&@callback : Callback)
     @parts = [] of String | Regex
     @last_dynamic_matches = [] of String
   end
