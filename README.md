@@ -38,6 +38,13 @@ puts value # => 42
 
 TODO: Write more usage instructions here
 
+## TODO
+
+[ ] execution policy (1. parse all THEN exec handler, 2. or parse AND exec when possible)
+    1. will be hard (impossible ?) when a callback comsume arguments based on runtime state.. ?
+[ ] recursive options : options that are applied on subparsers
+[ ] Exceptions on missing or no match
+
 ## Contributing
 
 1. Fork it ( https://github.com/Bew78LesellB/flag_parser.cr/fork )
