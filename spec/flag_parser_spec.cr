@@ -6,7 +6,7 @@ describe FlagParser do
       arg1 = false
       arg2 = false
 
-      FlagParser.parse %w(arg1 arg2) do |parser|
+      parser = FlagParser.new.tap do |parser|
         parser.on "arg1" do
           arg1 = true
         end
@@ -15,6 +15,7 @@ describe FlagParser do
         end
       end
 
+      parser.parse %w(arg1 arg2)
       arg1.should be_true
       arg2.should be_true
     end
@@ -23,30 +24,32 @@ describe FlagParser do
       value = nil
       expected_value = "mYValUe"
 
-      FlagParser.parse ["--option", expected_value] do |parser|
+      parser = FlagParser.new.tap do |parser|
         parser.add_rule "VALUE", FlagParser::Rule::ID
         parser.on "--option VALUE" do |(a_value)|
           value = a_value
         end
       end
 
+      parser.parse ["--option", expected_value]
       value.should eq(expected_value)
     end
 
     # TODO: split to a spec "is reusable with rules"
     it "multiple rules, multiple times" do
-      parser = FlagParser.new
-
-      parser.add_rule "OPTION", FlagParser::Rule::ID
-      parser.add_rule "NUMBER", /^\d+$/
-
       option_holder = "no_option"
       number_holder = 0
 
-      parser.on "-o OPTION NUMBER" do |(a_option, a_number)|
-        nb = a_number.to_i
-        option_holder = a_option
-        number_holder = nb
+      parser = FlagParser.new.tap do |parser|
+
+        parser.add_rule "OPTION", FlagParser::Rule::ID
+        parser.add_rule "NUMBER", /^\d+$/
+
+        parser.on "-o OPTION NUMBER" do |(a_option, a_number)|
+          nb = a_number.to_i
+          option_holder = a_option
+          number_holder = nb
+        end
       end
 
       parser.parse %w(-o first_option 1)
@@ -62,7 +65,7 @@ describe FlagParser do
     it "ambiguous rules" do
       success = false
 
-      FlagParser.parse %w(--option myvalue) do |parser|
+      parser = FlagParser.new.tap do |parser|
         parser.on "--option something" do
         end
 
@@ -74,18 +77,20 @@ describe FlagParser do
         end
       end
 
+      parser.parse %w(--option myvalue)
       success.should be_true
     end
 
     it "different flag format" do
       counter = 0
 
-      FlagParser.parse %w(help -h --help) do |parse|
-        parse.on "-h", "--help", "help" do
+      parser = FlagParser.new.tap do |parser|
+        parser.on "-h", "--help", "help" do
           counter += 1
         end
       end
 
+      parser.parse %w(help -h --help)
       counter.should eq(3)
     end
 
