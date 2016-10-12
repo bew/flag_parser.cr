@@ -58,7 +58,7 @@ class FlagParser
   # type spec needed ?
   def on(*flags, doc description = nil, &block : Flag::Callback)
     on_impl(*flags, doc: description, &block)
-    return #nil
+    return # nil
   end
 
   protected def on_impl(*flags, doc description = nil, &block : Flag::Callback)
@@ -118,14 +118,25 @@ class FlagParser
 end
 
 class FlagSubParser < FlagParser
+  alias Upvalue = Hash(Symbol, String)
+
   getter upvalues
 
   def initialize(@upvalues = {} of Symbol => String)
     super
   end
 
-  def parse(args, @upvalues)
-    super args
+  def parse(args, upvalues : Upvalue? = nil)
+    if upvalues
+      # use '@upvalues' & 'upvalues'
+      save = @upvalues
+      @upvalues = @upvalues.merge(upvalues)
+      super args
+      @upvalues = save
+    else
+      # use '@upvalues'
+      super args
+    end
   end
 end
 
