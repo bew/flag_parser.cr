@@ -8,6 +8,7 @@ class FlagParser
 
   def initialize
     @banner = [] of String
+    @subparsers = [] of FlagSubParser
     @handlers = [] of FlagParser::Flag
     @rules = {} of String => Regex
   end
@@ -46,12 +47,17 @@ class FlagParser
   end
 
   def branch_on(*flags, parser subparser, doc description = nil)
+    # @subparsers << subparser
+    # ^^^ not good: we forget the *flags on which the branch is created
     flag_handlers = on_impl(*flags, doc: description) do |_, args|
       subparser.parse args
     end
   end
 
   def branch_on(*flags, parser subparser, doc description = nil, &block : Flag::Callback)
+    # @subparsers << subparser
+    # ^^^ not good: we forget the *flags on which the branch is created
+    # TODO: find a way to store the flags intelligibaly
     flag_handlers = on_impl(*flags, doc: description, &block)
   end
 
@@ -123,7 +129,7 @@ class FlagSubParser < FlagParser
   getter upvalues
 
   def initialize(@upvalues = {} of Symbol => String)
-    super
+    super()
   end
 
   def parse(args, upvalues : Upvalue? = nil)
