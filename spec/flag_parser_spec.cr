@@ -98,56 +98,46 @@ describe FlagParser do
       # TODO
     end
 
+    pending "(show/save) candidate(s) on unknown arg that start to match one or more times" do
+      # TODO
+    end
+
     pending "call specific callback on unknown arg" do
       # TODO
     end
   end
 
   describe "#branch_on" do
-    # init sub parsers
-
-    suboption = false
-    subparser_simple = FlagParser.new.tap do |parser|
-      parser.on "-so" do
+    it "automatic simple flag" do
+      suboption = false
+      subparser = FlagParser.new
+      subparser.on "-so" do
         suboption = true
       end
-    end
 
-    subname = ""
-    subparser_upvalue = FlagSubParser.new.tap do |parser|
-      parser.on "-so" do
-        subname = "wtf"
-      end
-
-      parser.add_rule "RULE", FlagParser::Rule::ID
-
-      parser.on "-sn" do
-        subname = parser.upvalues[:name]
-      end
-    end
-
-    Spec.before_each do
-      suboption = false
-      subname = ""
-    end
-
-    it "automatic simple flag" do
       parser = FlagParser.new
-      parser.branch_on "sub", parser: subparser_simple
+      parser.branch_on "sub", parser: subparser
 
       parser.parse %w(sub -so)
       suboption.should be_true
     end
 
     it "manual flag with rule" do
+
+      subname = ""
+      subparser = FlagSubParser.new
+      subparser.on "assign" do
+        subname = subparser.upvalues[:name]
+      end
+
       parser = FlagParser.new
       parser.add_rule "NAME", FlagParser::Rule::ID
 
-      parser.branch_on "sub NAME", parser: subparser_upvalue do |(name), args|
-        subparser_upvalue.parse args, upvalues: {:name => name}
+      parser.branch_on "sub NAME", parser: subparser do |(name), args|
+        subparser.parse args, upvalues: {:name => name}
       end
 
-      parser.parse %w(sub my_name -sn)
+      parser.parse %w(sub my_name assign)
       subname.should eq("my_name")
     end
   end
