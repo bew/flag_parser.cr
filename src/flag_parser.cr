@@ -123,6 +123,8 @@ class FlagParser
   end
 end
 
+# The main difference between a FlagParser & a FlagSubParser is that
+# a sub parser has and depends on a set of upvalues
 class FlagSubParser < FlagParser
   alias Upvalue = Hash(Symbol, String)
 
