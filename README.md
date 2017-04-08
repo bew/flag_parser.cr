@@ -10,7 +10,7 @@ Add this to your application's `shard.yml`:
 ```yaml
 dependencies:
   flag_parser:
-    github: Bew78LesellB/flag_parser.cr
+    github: bew/flag_parser.cr
 ```
 
 
@@ -47,7 +47,7 @@ TODO: Write more usage instructions here
 
 ## Contributing
 
-1. Fork it ( https://github.com/Bew78LesellB/flag_parser.cr/fork )
+1. Fork it ( https://github.com/bew/flag_parser.cr/fork )
 2. Create your feature branch (git checkout -b my-new-feature)
 3. Commit your changes (git commit -am 'Add some feature')
 4. Push to the branch (git push origin my-new-feature)
@@ -55,4 +55,4 @@ TODO: Write more usage instructions here
 
 ## Contributors
 
-- [Bew78LesellB](https://github.com/Bew78LesellB) Benoit de Chezelles - creator, maintainer
+- [bew](https://github.com/bew) Benoit de Chezelles - creator, maintainer
